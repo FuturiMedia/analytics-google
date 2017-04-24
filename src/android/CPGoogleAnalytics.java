@@ -61,6 +61,7 @@ public class CPGoogleAnalytics extends CordovaPlugin {
   private static final String ACTION_SET_CAMPAIGN_FROM_URL = "setCampaignFromUrl";
   private static final String ACTION_SET_CUSTOM_PARAMS = "setCustomParams";
   private static final String ACTION_SET_USER_ID = "setUserId";
+  private static final String ACTION_SET_CLIENT_ID = "setClientId";
   private static final String ACTION_SET_DEBUG_MODE = "setDebugMode";
 
   private static final String OPT_SCREEN_NAME = "screenName";
@@ -196,6 +197,11 @@ public class CPGoogleAnalytics extends CordovaPlugin {
     } else if (ACTION_SET_USER_ID.equals(action)) {
       if (args.length() > 0) {
         result = execSetUserId(args.getString(0), callbackContext);
+      }
+
+    } else if (ACTION_SET_CLIENT_ID.equals(action)) {
+      if (args.length() > 0) {
+        result = execSetClientId(args.getString(0), callbackContext);
       }
 
     } else if (ACTION_SET_DEBUG_MODE.equals(action)) {
@@ -555,6 +561,20 @@ public class CPGoogleAnalytics extends CordovaPlugin {
 
     } else if (null != userId && userId.length() > 0) {
       tracker.set("&uid", userId);
+      result = new PluginResult(Status.OK);
+    }
+
+    return result;
+  }
+
+  private PluginResult execSetClientId(String clientId, CallbackContext callbackContext) {
+    PluginResult result = new PluginResult(Status.ERROR, "Missing client id");
+
+    if (tracker == null) {
+      result = new PluginResult(Status.ERROR, "Tracker not started. Call startTrackerWithId('UA-XXXXXX'); first.");
+
+    } else if (null != clientId && clientId.length() > 0) {
+      tracker.setClientId(clientId);
       result = new PluginResult(Status.OK);
     }
 

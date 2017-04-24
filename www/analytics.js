@@ -223,6 +223,10 @@ analytics.setUserId = function (id, success, error) {
   cordova.exec(success, error, 'GAPlugin', 'setUserId', [id]);
 };
 
+analytics.setClientId = function (id, success, error) {
+  cordova.exec(success, error, 'GAPlugin', 'setClientId', [id]);
+};
+
 analytics.setDebugMode = function (success, error) {
   cordova.exec(success, error, 'GAPlugin', 'setDebugMode', []);
 };

@@ -439,6 +439,13 @@ Specify user id (improves cross-device tracking).
 * {function()} success: (Optional) success callback.
 * {function()} failure: (Optional) failure callback.
 
+#### setClientId(id, success, error);
+Specify client id (improves cross-device tracking).
+
+* {String}     id:      (Required) client id. Must be a valid version 4 uuid
+* {function()} success: (Optional) success callback.
+* {function()} failure: (Optional) failure callback.
+
 #### setDebugMode(success, error);
 Sets log level to VERBOSE.
 
