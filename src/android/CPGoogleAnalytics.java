@@ -28,6 +28,7 @@ package com.appfeel.cordova.analytics;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Map;
 
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
@@ -47,6 +48,7 @@ import com.google.android.gms.analytics.ecommerce.Promotion;
 
 public class CPGoogleAnalytics extends CordovaPlugin {
   public static Tracker tracker = null;
+  public static Tracker tracker2 = null;
 
   private static final String ACTION_START_TRACKER = "startTrackerWithId";
   private static final String ACTION_SET_DISPATCH_PERIOD = "setDispatchPeriod";
@@ -222,13 +224,27 @@ public class CPGoogleAnalytics extends CordovaPlugin {
     PluginResult result = new PluginResult(Status.ERROR, "Invalid tracker");
 
     if (null != id && id.length() > 0) {
-      tracker = GoogleAnalytics.getInstance(this.cordova.getActivity()).newTracker(id);
+      String[] ids = id.split(",");
+
+      tracker = GoogleAnalytics.getInstance(this.cordova.getActivity()).newTracker(ids[0]);
       GoogleAnalytics.getInstance(this.cordova.getActivity()).setLocalDispatchPeriod(30);
       GoogleAnalytics.getInstance(this.cordova.getActivity()).getLogger().setLogLevel(LogLevel.ERROR);
+
+      if (ids.length > 1) {
+        tracker2 = GoogleAnalytics.getInstance(this.cordova.getActivity()).newTracker(ids[1]);
+      }
+
       result = new PluginResult(Status.OK);
     }
 
     return result;
+  }
+
+  private void sendTrackers(Map<String,String> hit) {
+    tracker.send(hit);
+    if (tracker2 != null) {
+      tracker2.send(hit);
+    }
   }
 
   private PluginResult execSetDispatchPeriod(Integer period, CallbackContext callbackContext) {
@@ -255,7 +271,12 @@ public class CPGoogleAnalytics extends CordovaPlugin {
       actualScreen = options.optString(OPT_SCREEN_NAME);
       tracker.setScreenName(actualScreen);
 
-      tracker.send(builder.build());
+      if (tracker2 != null) {
+        tracker2.setScreenName(actualScreen);
+      }
+
+      sendTrackers(builder.build());
+
       result = new PluginResult(Status.OK);
     }
 
@@ -281,7 +302,8 @@ public class CPGoogleAnalytics extends CordovaPlugin {
         builder.setValue(options.optLong(OPT_VALUE));
       }
 
-      tracker.send(builder.build());
+      sendTrackers(builder.build());
+
       result = new PluginResult(Status.OK);
     }
 
@@ -305,7 +327,8 @@ public class CPGoogleAnalytics extends CordovaPlugin {
         builder.setLabel(options.optString(OPT_LABEL));
       }
 
-      tracker.send(builder.build());
+      sendTrackers(builder.build());
+
       result = new PluginResult(Status.OK);
 
     }
@@ -336,6 +359,9 @@ public class CPGoogleAnalytics extends CordovaPlugin {
 
       if (options.has(OPT_PRODUCT_SCREEN_NAME)) {
         tracker.setScreenName(options.optString(OPT_PRODUCT_SCREEN_NAME));
+        if (tracker2 != null) {
+          tracker2.setScreenName(options.optString(OPT_PRODUCT_SCREEN_NAME));
+        }
       }
 
       // THIS IS VERY UGLY AS HitBuilders.HitBuilder INTERFACE IS NOT VISIBLE
@@ -377,7 +403,7 @@ public class CPGoogleAnalytics extends CordovaPlugin {
         }
 
         if (builder != null) {
-          tracker.send(builder.build());
+          sendTrackers(builder.build());
           result = new PluginResult(Status.OK);
         }
         /// REPEATED CODE FOR SCREEN VIEWS -->
@@ -411,13 +437,16 @@ public class CPGoogleAnalytics extends CordovaPlugin {
         }
 
         if (builder != null) {
-          tracker.send(builder.build());
+          sendTrackers(builder.build());
           result = new PluginResult(Status.OK);
         }
         /// REPEATED CODE FOR EVENTS -->
       }
 
       tracker.setScreenName(actualScreen);
+      if (tracker2 != null) {
+        tracker2.setScreenName(actualScreen);
+      }
     }
 
     return result;
@@ -451,6 +480,9 @@ public class CPGoogleAnalytics extends CordovaPlugin {
 
       if (options.has(OPT_PRODUCT_SCREEN_NAME)) {
         tracker.setScreenName(options.optString(OPT_PRODUCT_SCREEN_NAME));
+        if (tracker2 != null) {
+          tracker2.setScreenName(options.optString(OPT_PRODUCT_SCREEN_NAME));
+        }
       }
 
       if (options.has(OPT_CATEGORY) && options.has(OPT_ACTION)) {
@@ -470,7 +502,7 @@ public class CPGoogleAnalytics extends CordovaPlugin {
         if (productAction != null) {
           builder.setProductAction(productAction);
         }
-        tracker.send(builder.build());
+        sendTrackers(builder.build());
 
       } else {
         HitBuilders.ScreenViewBuilder builder = new HitBuilders.ScreenViewBuilder();
@@ -480,10 +512,13 @@ public class CPGoogleAnalytics extends CordovaPlugin {
         if (productAction != null) {
           builder.setProductAction(productAction);
         }
-        tracker.send(builder.build());
+        sendTrackers(builder.build());
       }
 
       tracker.setScreenName(actualScreen);
+      if (tracker2 != null) {
+        tracker2.setScreenName(actualScreen);
+      }
       result = new PluginResult(Status.OK);
     }
 
@@ -504,7 +539,7 @@ public class CPGoogleAnalytics extends CordovaPlugin {
       builder.setAction(options.optString(OPT_ACTION));
       builder.setTarget(options.optString(OPT_TARGET));
 
-      tracker.send(builder.build());
+      sendTrackers(builder.build());
       result = new PluginResult(Status.OK);
 
     }
@@ -515,15 +550,27 @@ public class CPGoogleAnalytics extends CordovaPlugin {
   private PluginResult execSetAppParams(JSONObject options, CallbackContext callbackContext) {
     if (options.has(OPT_APP_ID)) {
       tracker.setAppId(options.optString(OPT_APP_ID));
+      if (tracker2 != null) {
+        tracker2.setAppId(options.optString(OPT_APP_ID));
+      }
     }
     if (options.has(OPT_APP_INSTALLER_ID)) {
       tracker.setAppInstallerId(options.optString(OPT_APP_INSTALLER_ID));
+      if (tracker2 != null) {
+        tracker2.setAppInstallerId(options.optString(OPT_APP_INSTALLER_ID));
+      }
     }
     if (options.has(OPT_APP_NAME)) {
       tracker.setAppName(options.optString(OPT_APP_NAME));
+      if (tracker2 != null) {
+        tracker2.setAppName(options.optString(OPT_APP_NAME));
+      }
     }
     if (options.has(OPT_APP_VERSION)) {
       tracker.setAppVersion(options.optString(OPT_APP_VERSION));
+      if (tracker2 != null) {
+        tracker2.setAppVersion(options.optString(OPT_APP_VERSION));
+      }
     }
 
     return new PluginResult(Status.OK);
@@ -547,6 +594,9 @@ public class CPGoogleAnalytics extends CordovaPlugin {
 
       for (i = 0; i < names.length(); i += 1) {
         tracker.set(names.optString(i), options.optString(names.optString(i)));
+        if (tracker2 != null) {
+          tracker2.set(names.optString(i), options.optString(names.optString(i)));
+        }
       }
     }
 
@@ -561,6 +611,9 @@ public class CPGoogleAnalytics extends CordovaPlugin {
 
     } else if (null != userId && userId.length() > 0) {
       tracker.set("&uid", userId);
+      if (tracker2 != null) {
+        tracker2.set("&uid", userId);
+      }
       result = new PluginResult(Status.OK);
     }
 
@@ -575,6 +628,9 @@ public class CPGoogleAnalytics extends CordovaPlugin {
 
     } else if (null != clientId && clientId.length() > 0) {
       tracker.setClientId(clientId);
+      if (tracker2 != null) {
+        tracker2.setClientId(clientId);
+      }
       result = new PluginResult(Status.OK);
     }
 
@@ -814,6 +870,9 @@ public class CPGoogleAnalytics extends CordovaPlugin {
 
     if (options.has(OPT_CURRENCY_CODE)) {
       tracker.set("&cu", options.optString(OPT_CAMPAIGN_URL));
+      if (tracker2 != null) {
+        tracker2.set("&cu", options.optString(OPT_CAMPAIGN_URL));
+      }
     }
 
     if (options.has(OPT_CAMPAIGN_URL)) {
